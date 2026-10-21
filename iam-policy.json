@@ -1,0 +1,46 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Discovery",
+      "Effect": "Allow",
+      "Action": ["ec2:DescribeRegions", "ec2:DescribeInstances", "ec2:DescribeSnapshots"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SnapshotVolumeAccess",
+      "Effect": "Allow",
+      "Action": "ec2:CreateSnapshot",
+      "Resource": "arn:aws:ec2:*:${aws:PrincipalAccount}:volume/*"
+    },
+    {
+      "Sid": "TaggedSnapshotCreation",
+      "Effect": "Allow",
+      "Action": "ec2:CreateSnapshot",
+      "Resource": "arn:aws:ec2:*::snapshot/*",
+      "Condition": {"StringEquals": {
+        "aws:RequestTag/ManagedBy": "ebs-backup-cli",
+        "aws:RequestTag/BackupPolicy": "running-Backup-true-v1",
+        "aws:RequestTag/CreatedByAccount": "${aws:PrincipalAccount}"
+      }}
+    },
+    {
+      "Sid": "TagDuringCreationOnly",
+      "Effect": "Allow",
+      "Action": "ec2:CreateTags",
+      "Resource": "arn:aws:ec2:*::snapshot/*",
+      "Condition": {"StringEquals": {"ec2:CreateAction": "CreateSnapshot"}}
+    },
+    {
+      "Sid": "DeleteOnlyManagedSnapshots",
+      "Effect": "Allow",
+      "Action": "ec2:DeleteSnapshot",
+      "Resource": "arn:aws:ec2:*::snapshot/*",
+      "Condition": {"StringEquals": {
+        "ec2:ResourceTag/ManagedBy": "ebs-backup-cli",
+        "ec2:ResourceTag/BackupPolicy": "running-Backup-true-v1",
+        "ec2:ResourceTag/CreatedByAccount": "${aws:PrincipalAccount}"
+      }}
+    }
+  ]
+}
